@@ -25,7 +25,7 @@
         android:gravity="center"
         android:maxLines="1"
         android:textColor="@color/black"
-        tools:text="Example itemExample itemExample itemExample itemExample item" />
+        tools:text="Example item" />
 
     <ImageView
         android:id="@+id/label_priority"
