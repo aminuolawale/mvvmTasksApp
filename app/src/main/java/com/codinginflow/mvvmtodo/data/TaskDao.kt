@@ -1,6 +1,7 @@
 package com.codinginflow.mvvmtodo.data
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -15,7 +16,7 @@ interface TaskDao {
     @Update
     suspend fun update(task: Task)
 
-    @Update
+    @Delete
     suspend fun delete(task: Task)
 
     @Query("SELECT * FROM task_table WHERE name LIKE '%' || :searchQuery || '%' AND (isCompleted != :hideCompletedTasks  or isCompleted = 0) ORDER BY isImportant DESC, name")
