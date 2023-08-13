@@ -1,7 +1,10 @@
 package com.codinginflow.mvvmtodo.ui.tasks
 
+import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.codinginflow.mvvmtodo.data.PreferencesManager
@@ -17,14 +20,15 @@ import kotlinx.coroutines.launch
 
 class TasksViewModel @ViewModelInject constructor(
     private val taskDao: TaskDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    @Assisted private val state: SavedStateHandle
 ) : ViewModel() {
-    val searchQuery = MutableStateFlow("")
+    val searchQuery = state.getLiveData("searchQuery", "")
     val preferencesFlow = preferencesManager.preferencesFlow
     private val tasksEventChannel = Channel<TasksEvent>()
     val tasksEvent = tasksEventChannel.receiveAsFlow()
     private val tasksFlow =
-        combine(searchQuery, preferencesFlow) { query, filterPreferences ->
+        combine(searchQuery.asFlow(), preferencesFlow) { query, filterPreferences ->
             Pair(
                 query,
                 filterPreferences
@@ -58,9 +62,18 @@ class TasksViewModel @ViewModelInject constructor(
             taskDao.insert(task)
         }
     }
-    fun onTaskSelected(task: Task) {}
+    fun onTaskSelected(task: Task) {
+        viewModelScope.launch { tasksEventChannel.send(TasksEvent.NavigateToEditTask(task)) }
+    }
+    fun onAddNewTaskClick() {
+        viewModelScope.launch {
+            tasksEventChannel.send(TasksEvent.NavigateToAddNewTask)
+        }
+    }
 
     sealed class TasksEvent {
+        object  NavigateToAddNewTask : TasksEvent()
+        data class NavigateToEditTask( val task: Task) : TasksEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
     }
 }
